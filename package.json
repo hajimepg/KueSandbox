@@ -1,0 +1,13 @@
+{
+  "name": "KueSandbox",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ava": "^0.25.0",
+    "kue": "^0.11.6"
+  },
+  "scripts": {
+    "test": "ava"
+  }
+}
