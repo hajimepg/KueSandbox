@@ -1,22 +1,38 @@
-const test = require("ava");
+import test from "ava";
+import kue from "kue";
 
-test("createQueue", (t) => {
+test("callback to other instance", (t) => {
     return new Promise((resolve, reject) => {
-        t.plan(0);
-
-        const kue = require("kue");
         const queue = kue.createQueue();
 
-        queue.create("email", {
-            title: "title",
-            to: "hajime@studiohff.net",
-            template: "test"
-        }).save((error) => {
+        const job = queue.create("test", {});
+
+        job.save((error) => {
             if (error !== null) {
                 reject(error);
             }
 
-            resolve();
+            kue.Job.get(job.id, "test", (error, sameJobOtherInstance) => {
+                if (error !== null) {
+                    reject(error);
+                }
+
+                t.is(job.id, sameJobOtherInstance.id);
+
+                const callbackHistory = [];
+                job.on("complete", () => { callbackHistory.push("job"); });
+                sameJobOtherInstance.on("complete", () => { callbackHistory.push("sameJobOtherInstance"); });
+
+                setTimeout(() => {
+                    t.true(callbackHistory.includes("job"));
+                    t.true(callbackHistory.includes("sameJobOtherInstance"));
+                    resolve();
+                }, 100);
+            });
+        });
+
+        queue.process("test", 1, (job, done) => {
+            done();
         });
     });
 });
